@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "run:echo": "node bin/echo.js",
+    "run:basic": "node bin/basic.js",
     "tslint": "tslint --fix **/*.ts",
     "build": "tsc --outDir bin",
     "test": "jest"
