@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
+    "run:echo": "node bin/echo.js",
     "tslint": "tslint --fix **/*.ts",
     "build": "tsc --outDir bin",
     "test": "jest"
