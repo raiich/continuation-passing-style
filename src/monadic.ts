@@ -3,15 +3,6 @@ import {Continuation, Expression, Interpreter, repl} from './util'
 class ContinuationMonad<A, R> {
     constructor(readonly callback: (c: (evaluated: A) => R) => R) {}
 
-    public map<B>(cont: (evaluated: A) => B): ContinuationMonad<B, R> {
-        return new ContinuationMonad(nextCont => {
-            return this.callback((a: A) => {
-                const ret = cont(a)
-                return nextCont(ret)
-            })
-        })
-    }
-
     public fmap<B>(f: (a: A) => ContinuationMonad<B, R>): ContinuationMonad<B, R> {
         return new ContinuationMonad<B, R>(nextCont => {
             return this.callback((x: any) => {
