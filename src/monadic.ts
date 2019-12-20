@@ -12,6 +12,8 @@ class Cont<A, R> {
     }
 }
 
+type Func = (args: Array<number>) => Cont<number, void>
+
 /**
  * 1. Evaluate function:
  *   |f| => f
@@ -23,12 +25,13 @@ class Cont<A, R> {
  *
  * @param s statement (S-Expression)
  */
-function evalExpression(s: Expression): Cont<any, any> {
+function evalExpression(s: Expression): Cont<number | Func, void> {
     if (s instanceof Array) { // function call
         const [head, ...tail] = s
         return evalExpression(head).fmap((method) => {
             return evalArgs(tail).fmap((args) => {
-                return method(args).fmap((result: any) => {
+                const func = method as Func
+                return func(args).fmap((result: number) => {
                     return new Cont((cont) => cont(result))
                 })
             })
@@ -40,12 +43,12 @@ function evalExpression(s: Expression): Cont<any, any> {
     }
 }
 
-function evalArgs(args: Expression): Cont<any, any> {
+function evalArgs(args: Expression): Cont<Array<number>, void> {
     if (args.length > 0) {
         const [head, ...tail] = args
         return evalExpression(head).fmap((evaluated) => {
             return evalArgs(tail).fmap((evaluatedArgs) => {
-                return new Cont<any, any>((cont) => cont([evaluated, ...evaluatedArgs]))
+                return new Cont<Array<number>, void>((cont) => cont([evaluated as number, ...evaluatedArgs]))
             })
         })
     } else {
@@ -53,7 +56,7 @@ function evalArgs(args: Expression): Cont<any, any> {
     }
 }
 
-function plus(args: Array<number>) {
+function plus(args: Array<number>): Cont<number, void> {
     return new Cont((cont) => {
         cont(args.reduce((total, x) => total + x))
     })
