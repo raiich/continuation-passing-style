@@ -1,10 +1,10 @@
 import {Continuation, Expression, Interpreter, repl} from './util'
 
-class ContinuationMonad<A, R> {
+class Cont<A, R> {
     constructor(readonly callback: (c: (evaluated: A) => R) => R) {}
 
-    public fmap<B>(f: (a: A) => ContinuationMonad<B, R>): ContinuationMonad<B, R> {
-        return new ContinuationMonad<B, R>(nextCont => {
+    public fmap<B>(f: (a: A) => Cont<B, R>): Cont<B, R> {
+        return new Cont<B, R>(nextCont => {
             return this.callback((x: any) => {
                 return f(x).callback(nextCont)
             })
@@ -23,38 +23,38 @@ class ContinuationMonad<A, R> {
  *
  * @param s statement (S-Expression)
  */
-function evalExpression(s: Expression): ContinuationMonad<any, any> {
+function evalExpression(s: Expression): Cont<any, any> {
     if (s instanceof Array) { // function call
         const [head, ...tail] = s
         return evalExpression(head).fmap((method) => {
             return evalArgs(tail).fmap((args) => {
                 return method(args).fmap((result: any) => {
-                    return new ContinuationMonad((cont) => cont(result))
+                    return new Cont((cont) => cont(result))
                 })
             })
         })
     } else if (s === '+') {
-        return new ContinuationMonad((cont) => cont(plus))
+        return new Cont((cont) => cont(plus))
     } else {
-        return new ContinuationMonad((cont) => cont(parseInt(s)))
+        return new Cont((cont) => cont(parseInt(s)))
     }
 }
 
-function evalArgs(args: Expression): ContinuationMonad<any, any> {
+function evalArgs(args: Expression): Cont<any, any> {
     if (args.length > 0) {
         const [head, ...tail] = args
         return evalExpression(head).fmap((evaluated) => {
             return evalArgs(tail).fmap((evaluatedArgs) => {
-                return new ContinuationMonad<any, any>((cont) => cont([evaluated, ...evaluatedArgs]))
+                return new Cont<any, any>((cont) => cont([evaluated, ...evaluatedArgs]))
             })
         })
     } else {
-        return new ContinuationMonad((cont) => cont([]))
+        return new Cont((cont) => cont([]))
     }
 }
 
 function plus(args: Array<number>) {
-    return new ContinuationMonad((cont) => {
+    return new Cont((cont) => {
         cont(args.reduce((total, x) => total + x))
     })
 }
